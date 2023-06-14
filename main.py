@@ -1,13 +1,24 @@
 import pyautogui
 import time
-# from pynput.mouse import Button, Controller
 
 TILE_SIZE = 22
-
 screen_width, screen_height = pyautogui.size()
+SPEED = 0.01
+SAFE = False
 
 
+def focus_terraria():
+    for i, w in enumerate(pyautogui.getWindowsWithTitle("terraria")):
+        if "Terraria: " in w.title:
+            print("Terraria window found:", w.title)
+            w.minimize()
+            w.maximize()
 print(screen_width, screen_height)
+
+def left_click(duration=SPEED):
+    pyautogui.mouseDown()
+    time.sleep(duration)
+    pyautogui.mouseUp()
 
 def hold_key(key, hold_time):
     key = str(key)
@@ -16,50 +27,36 @@ def hold_key(key, hold_time):
         pyautogui.keyDown(key)
     pyautogui.keyUp(key)
 
-# (32 bits)
-
-def focus_terraria():
-    for i, w in enumerate(pyautogui.getWindowsWithTitle("terraria")):
-        if "Terraria: " in w.title:
-            print("Terraria window found:", w.title)
-            w.minimize()
-            w.maximize()
       
 def select_slot(slot):
-    hold_key(slot, 0.1)
+    hold_key(slot, SPEED)
 
 
 def place_block():
     select_slot(4)
-    pyautogui.mouseDown()
-    time.sleep(0.01)
-    pyautogui.mouseUp()
+    left_click()
 
 def move_right():
     hold_key('d', 1)
     
-def hammer_block():
+def hammer_block(times=4):
     select_slot(3)
-    for _ in range(4):
-        pyautogui.mouseDown()
-        time.sleep(0.01)
-        pyautogui.mouseUp()
-        time.sleep(0.01)
+    for _ in range(times):
+        left_click()
+        time.sleep(SPEED)
         
 def mine_block():
     select_slot(2)
-    pyautogui.mouseDown()
-    time.sleep(0.2)
-    pyautogui.mouseUp()
+    left_click(0.2)
     
 
     
-    
-# ============SETUP===============
-focus_terraria()
-    
-# ============TEST===============
 
+
+def reset_cursor():
+    pyautogui.moveTo(screen_width/2, screen_height/2)
+    cursor_move('right')    
+    cursor_move('up', 2)
 
 def cursor_move(axis, distance=1):
     p = distance * TILE_SIZE
@@ -72,62 +69,65 @@ def cursor_move(axis, distance=1):
     elif axis == 'right':
         pyautogui.moveRel(p, 0)
 
-        
-        
-        
-pyautogui.moveTo(screen_width/2, screen_height/2)
-x, y = pyautogui.position()
 
-time.sleep(0.1)
-x += TILE_SIZE
-pyautogui.moveTo(x, y)
 
-while True:
-    cursor_move('down')
-    cursor_move('down')
+def place_wall():
+    if SAFE:
+        select_slot(2)
+        mine_block()
+    select_slot(5)
+    left_click()
+    
+def place_torch():
+    select_slot(6)
+    left_click()
 
-    hammer_block()
 
-    cursor_move('right')
-    cursor_move('right')
+def do_zone(torch=False):
+    reset_cursor()
     place_block()
-
-    cursor_move('up')
-    place_block()
-
-    cursor_move('up')
-    place_block()
-
-    cursor_move('left')
-    cursor_move('left')
-    mine_block()
-
+    
     cursor_move('down')
     mine_block()
+    place_wall()
+    for _ in range(4):
+        cursor_move('down')
+        place_wall()
+    
+    
+    cursor_move('down')
+    place_block()
+    cursor_move('right')
+    
+    
+    for i in range(3):
+        place_block()
+        if i == 1:
+            hammer_block(4)
+            place_wall()
+        elif i == 2:
+            hammer_block(5)
+            place_wall()
+        cursor_move('up')
 
+    for i in range(3):
+        place_wall()
+        if i == 1:
+            place_torch()
+        cursor_move('up')
+        
+    place_block()
+    cursor_move('down')
+    cursor_move('right')
+    place_block()
+    
     move_right()
-    cursor_move('up')
-
-
-# cursor_move('up', 1)
-# time.sleep(0.2)
-# cursor_move('down', 1)
-# time.sleep(0.2)
-# cursor_move('left', 1)
-# time.sleep(0.2)
-# cursor_move('right', 1)
-# time.sleep(0.2)
-
-# print(pyautogui.KEY_NAMES)
-
-
     
 
-
-
-# time.sleep(7)
-# for i in range(10):
-#     mouse.press()
-#     time.sleep(0.01)
-#     mouse.release(Button.left)
-#     hold_key('a', 0.22)
+focus_terraria()
+for i in range(10):
+  
+    if i % 4 == 0:
+        do_zone(torch=True)
+    else:
+        do_zone()
