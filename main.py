@@ -1,11 +1,19 @@
 import pyautogui
 import time
 
+pyautogui.PAUSE = 0.07
 TILE_SIZE = 22
 screen_width, screen_height = pyautogui.size()
 SPEED = 0.01
 SAFE = False
 
+
+def time_func(func):
+    def wrapper(*args, **kwargs):
+        start = time.time()
+        func(*args, **kwargs)
+        print(f"{func.__name__}:", str(time.time() - start)[:4])
+    return wrapper
 
 def focus_terraria():
     for i, w in enumerate(pyautogui.getWindowsWithTitle("terraria")):
@@ -14,6 +22,7 @@ def focus_terraria():
             w.minimize()
             w.maximize()
 print(screen_width, screen_height)
+
 
 def left_click(duration=SPEED):
     pyautogui.mouseDown()
@@ -27,7 +36,7 @@ def hold_key(key, hold_time):
         pyautogui.keyDown(key)
     pyautogui.keyUp(key)
 
-      
+
 def select_slot(slot):
     hold_key(slot, SPEED)
 
@@ -36,27 +45,28 @@ def place_block():
     select_slot(4)
     left_click()
 
+
 def move_right():
-    hold_key('d', 1)
+    hold_key('d', 0.4)
+
     
 def hammer_block(times=4):
     select_slot(3)
     for _ in range(times):
         left_click()
-        time.sleep(SPEED)
-        
+        time.sleep(0.1)
+
+  
 def mine_block():
     select_slot(2)
     left_click(0.2)
-    
-
-    
 
 
 def reset_cursor():
     pyautogui.moveTo(screen_width/2, screen_height/2)
     cursor_move('right')    
     cursor_move('up', 2)
+
 
 def cursor_move(axis, distance=1):
     p = distance * TILE_SIZE
@@ -71,19 +81,21 @@ def cursor_move(axis, distance=1):
 
 
 
-def place_wall():
-    if SAFE:
+
+def place_wall(safe=SAFE):
+    if safe:
         select_slot(2)
         mine_block()
     select_slot(5)
     left_click()
     
+
 def place_torch():
     select_slot(6)
     left_click()
 
 
-def do_zone(torch=False):
+def do_zone():
     reset_cursor()
     place_block()
     
@@ -101,13 +113,18 @@ def do_zone(torch=False):
     
     
     for i in range(3):
-        place_block()
+        
         if i == 1:
+            place_wall(safe=True)
+            place_block()
             hammer_block(4)
-            place_wall()
+            
         elif i == 2:
+            place_wall(safe=True)
+            place_block()
             hammer_block(5)
-            place_wall()
+        else:
+            place_block()
         cursor_move('up')
 
     for i in range(3):
@@ -117,17 +134,24 @@ def do_zone(torch=False):
         cursor_move('up')
         
     place_block()
-    cursor_move('down')
-    cursor_move('right')
-    place_block()
+    
+    if SAFE:
+        reset_cursor()
+        cursor_move('down')
+        cursor_move('right', 2)
+        for _ in range(5):
+            place_block()
+            cursor_move('down')
+        reset_cursor()
+    else:
+        cursor_move('down')
+        cursor_move('right')
+        place_block()
     
     move_right()
     
+    
 
 focus_terraria()
-for i in range(10):
-  
-    if i % 4 == 0:
-        do_zone(torch=True)
-    else:
-        do_zone()
+for i in range(100):
+    do_zone()
