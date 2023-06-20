@@ -2,7 +2,7 @@ import pyautogui
 import time
 
 pyautogui.PAUSE = 0.07
-TILE_SIZE = 22
+TILE_SIZE = 16
 screen_width, screen_height = pyautogui.size()
 SPEED = 0.01
 SAFE = False
@@ -153,5 +153,7 @@ def do_zone():
     
 
 focus_terraria()
+time.sleep(5)
 for i in range(100):
+    
     do_zone()
