@@ -1,6 +1,11 @@
 import pyautogui
 import time
 
+start = time.time()
+import easyocr
+print("easyocr import:", str(time.time() - start)[:4])
+from thefuzz import fuzz
+
 pyautogui.PAUSE = 0.07
 TILE_SIZE = 16
 screen_width, screen_height = pyautogui.size()
@@ -16,12 +21,18 @@ def time_func(func):
     return wrapper
 
 def focus_terraria():
+    print(screen_width, screen_height)
     for i, w in enumerate(pyautogui.getWindowsWithTitle("terraria")):
-        if "Terraria: " in w.title:
+        print(i, w.title)
+        if "Terraria" in w.title:
             print("Terraria window found:", w.title)
             w.minimize()
             w.maximize()
-print(screen_width, screen_height)
+            return
+        
+    print("Terraria window not found, exiting...")
+    exit()
+            
 
 
 def left_click(duration=SPEED):
@@ -48,6 +59,9 @@ def place_block():
 
 def move_right():
     hold_key('d', 0.4)
+    
+def move_left():
+    hold_key('a', 0.4)
 
     
 def hammer_block(times=4):
@@ -64,7 +78,7 @@ def mine_block():
 
 def reset_cursor():
     pyautogui.moveTo(screen_width/2, screen_height/2)
-    cursor_move('right')    
+    cursor_move('left')    
     cursor_move('up', 2)
 
 
@@ -109,7 +123,7 @@ def do_zone():
     
     cursor_move('down')
     place_block()
-    cursor_move('right')
+    cursor_move('left')
     
     
     for i in range(3):
@@ -117,12 +131,12 @@ def do_zone():
         if i == 1:
             place_wall(safe=True)
             place_block()
-            hammer_block(4)
+            hammer_block(5)
             
         elif i == 2:
             place_wall(safe=True)
             place_block()
-            hammer_block(5)
+            hammer_block(4)
         else:
             place_block()
         cursor_move('up')
@@ -138,22 +152,76 @@ def do_zone():
     if SAFE:
         reset_cursor()
         cursor_move('down')
-        cursor_move('right', 2)
+        cursor_move('left', 2)
         for _ in range(5):
             place_block()
             cursor_move('down')
         reset_cursor()
     else:
         cursor_move('down')
-        cursor_move('right')
+        cursor_move('left')
         place_block()
     
-    move_right()
+    move_left()
+    
+
+
+
+def fish_bot():
+    reader = easyocr.Reader(['en'])
+    
+    def reset_cursor():
+        pyautogui.moveTo(screen_width/2, screen_height/2)
+        cursor_move('right')
+        cursor_move('down', 2)
+        
+    
+    
+    def check_fish():
+        im = pyautogui.screenshot(region=(screen_width/2 - 120, screen_height/2 - 30, 240, 50))
+        
+        im.save('screen.png')
+        result = reader.readtext('screen.png')
+        
+        for r in result:
+            
+            
+            for w in whitelist:
+                ocr_raw = r[1].lower()
+                ratio = fuzz.partial_token_sort_ratio(w, ocr_raw) / 100
+                reset_cursor()
+                if ratio > 0.6:
+                    # im.save(f'screen-{time.time()}.png')
+                    print(f'Caught: {w} for ratio {ratio} on {ocr_raw}')
+                    left_click()
+                    
+                    return True
+                else:
+                    print(f'DECLINED: {w} for ratio {ratio} on {ocr_raw}')
+                    
+                    
+    whitelist = ['caisse']
+    
+    
+    
+    reset_cursor()
+    select_slot(1)
+    left_click()
+    
+    
+    while True:
+        if check_fish():
+            left_click()
+            print("CAUGHT TARGET")
+            time.sleep(1)
+            
+        
     
     
 
+
 focus_terraria()
-time.sleep(5)
-for i in range(100):
-    
-    do_zone()
+# time.sleep(5)
+for i in range(1):
+    fish_bot()
+    # do_zone()
