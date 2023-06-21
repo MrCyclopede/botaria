@@ -256,7 +256,7 @@ def scan_qrcode():
     center_y = int(screen_height/2) - 3 - (TILE_SIZE * 6 + TILE_SIZE/2)
     
     im = pyautogui.screenshot(region=(center_x, center_y, 3 * TILE_SIZE, 3 * TILE_SIZE))
-    im.save('qrscreen.png')
+    im.save('screen_qr.png')
     
     x = TILE_SIZE/2
     y = TILE_SIZE/2
