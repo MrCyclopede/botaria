@@ -178,7 +178,7 @@ def fish_bot():
     
     
     def check_fish():
-        im = pyautogui.screenshot(region=(screen_width/2 - 120, screen_height/2 - 30, 240, 50))
+        im = pyautogui.screenshot(region=(screen_width/2 - (8 * TILE_SIZE) , screen_height/2 - (2 * TILE_SIZE), 15 * TILE_SIZE, 3 * TILE_SIZE))
         
         im.save('screen.png')
         result = reader.readtext('screen.png')
@@ -191,7 +191,7 @@ def fish_bot():
                 ratio = fuzz.partial_token_sort_ratio(w, ocr_raw) / 100
                 reset_cursor()
                 if ratio > 0.6:
-                    # im.save(f'screen-{time.time()}.png')
+                    im.save(f'screen-{time.time()}.png')
                     print(f'Caught: {w} for ratio {ratio} on {ocr_raw}')
                     left_click()
                     
