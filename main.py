@@ -1,5 +1,7 @@
 import pyautogui
 import time
+import numpy as np
+
 
 start = time.time()
 import easyocr
@@ -11,6 +13,8 @@ TILE_SIZE = 16
 screen_width, screen_height = pyautogui.size()
 SPEED = 0.01
 SAFE = False
+
+QR_SPAWN = 469
 
 
 def time_func(func):
@@ -231,15 +235,47 @@ def fish_bot():
             reset_cursor()
             
         time.sleep(0.1)
-        
-            
-        
     
     
+def get_color(color):
+    colors = [[0,0,0],[155,155,155]]
+    colors = np.array(colors)
+    color = np.array(color)
+    distances = np.sqrt(np.sum((colors-color)**2,axis=1))
+    index_of_smallest = np.where(distances==np.amin(distances))
+    
+    return index_of_smallest[0][0]
 
+def scan_qrcode():
+    
+    def reset_cursor():
+        pyautogui.moveTo(screen_width/2, screen_height/2)
+    reset_cursor()        
+    
+    center_x = int(screen_width/2) - (TILE_SIZE + TILE_SIZE/2)
+    center_y = int(screen_height/2) - 3 - (TILE_SIZE * 6 + TILE_SIZE/2)
+    
+    im = pyautogui.screenshot(region=(center_x, center_y, 3 * TILE_SIZE, 3 * TILE_SIZE))
+    im.save('qrscreen.png')
+    
+    x = TILE_SIZE/2
+    y = TILE_SIZE/2
+    qrcode = 0
+    for i in range(9):
+        rel_x = int(x + (TILE_SIZE * (i % 3)))
+        rel_y = int(y + TILE_SIZE * (i // 3))
+        px = im.getpixel((rel_x, rel_y))
+        qrcode += get_color(px) * (2 ** i)
+    return qrcode
+
+        
+def check_spawn():
+    return scan_qrcode() == QR_SPAWN
 
 focus_terraria()
 # time.sleep(5)
 for i in range(1):
-    fish_bot()
-    # do_zone()
+    start = time.time()
+    print("ITS SPAWN ? :", check_spawn())
+    print(f'check_spawn took {time.time() - start}')
+    
