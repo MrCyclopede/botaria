@@ -170,14 +170,16 @@ def do_zone():
 def fish_bot():
     reader = easyocr.Reader(['en'])
     
+    
     def reset_cursor():
-        pyautogui.moveTo(screen_width/2, screen_height/2)
-        cursor_move('right')
-        cursor_move('down', 2)
+        pyautogui.moveTo(screen_width/2 + TILE_SIZE, screen_height/2 + TILE_SIZE * 2)
+        # cursor_move('right')
+        # cursor_move('down', 2)
         
     
     
     def check_fish():
+        badluck = 0
         im = pyautogui.screenshot(region=(screen_width/2 - (8 * TILE_SIZE) , screen_height/2 - (2 * TILE_SIZE), 15 * TILE_SIZE, 3 * TILE_SIZE))
         
         im.save('screen.png')
@@ -185,22 +187,23 @@ def fish_bot():
         
         for r in result:
             
-            
             for w in whitelist:
                 ocr_raw = r[1].lower()
                 ratio = fuzz.partial_token_sort_ratio(w, ocr_raw) / 100
                 reset_cursor()
                 if ratio > 0.6:
-                    im.save(f'screen-{time.time()}.png')
+                    # im.save(f'screen-{time.time()}.png')
                     print(f'Caught: {w} for ratio {ratio} on {ocr_raw}')
                     left_click()
                     
-                    return True
+                    return 'caught'
                 else:
-                    print(f'DECLINED: {w} for ratio {ratio} on {ocr_raw}')
+                    return 'wrong_item'
+                    # print(f'DECLINED: {w} for ratio {ratio} on {ocr_raw}')
+        return 'not caught'
                     
                     
-    whitelist = ['caisse']
+    whitelist = ['caisse', 'zephyr']
     
     
     
@@ -208,12 +211,27 @@ def fish_bot():
     select_slot(1)
     left_click()
     
-    
+    badluck = 0
     while True:
-        if check_fish():
+        ret = check_fish()
+        if ret == 'caught':
             left_click()
-            print("CAUGHT TARGET")
+            badluck = 0
             time.sleep(1)
+        elif ret == 'wrong_item':
+            print(f'{badluck=}')
+            cursor_move('right', 2)
+            
+            badluck += 1
+        
+        if badluck > 3:
+            print('badluck, resetting')
+            badluck = 0
+            left_click()
+            reset_cursor()
+            
+        time.sleep(0.1)
+        
             
         
     
