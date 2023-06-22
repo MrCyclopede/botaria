@@ -1,3 +1,4 @@
 pyautogui
 easyocr
 thefuzz
+numpy
